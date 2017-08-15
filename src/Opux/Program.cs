@@ -33,6 +33,9 @@ namespace Opux
                 ApplicationBase = Path.GetDirectoryName(new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath);
                 if (!File.Exists(ApplicationBase + "/Opux.db"))
                     File.Copy(ApplicationBase + "/Opux.def.db", ApplicationBase + "/Opux.db");
+                Settings = new ConfigurationBuilder()
+                .SetBasePath(ApplicationBase)
+                .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
                 Client = new DiscordSocketClient(new DiscordSocketConfig() { WebSocketProvider = WS4NetProvider.Instance });
                 Commands = new CommandService();
                 EveLib = new EveLib();
