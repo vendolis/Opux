@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -282,15 +283,17 @@ namespace Opux
                 }
 
                 channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
-                    $"Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
+                    $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
                     $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
-                    $"Current Version: {repo.Head.Tip.Id}" +
-                    $"```Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}" +
-                    $"Memory Used: {MemoryUsed}{Environment.NewLine}" +
-                    $"Total Guilds Seen: {Guilds}{Environment.NewLine}" +
+                    $"Current Version: {repo.Head.Tip.Id}{Environment.NewLine}" +
+                    $"Current Branch: {repo.Head.FriendlyName}{Environment.NewLine}" +
+                    $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Statistics:{Environment.NewLine}" +
+                    $"Memory Used: {MemoryUsed}MB{Environment.NewLine}" +
+                    $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
                     $"Total Users Seen: {TotalUsers}```" +
-                    $"Invite URL: http://someinviteurl{Environment.NewLine}" +
-                    $"GitHub URL: http://github.com");
+                    $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id=347078401376649216&scope=bot>{Environment.NewLine}" +
+                    $"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
             }
 
             return Task.CompletedTask;
