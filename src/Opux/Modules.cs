@@ -128,6 +128,24 @@ namespace Opux
                 }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [Command("about", RunMode = RunMode.Async), Summary("About Opux")]
+        public async Task About()
+        {
+            try
+            {
+                await Functions.About(Context);
+            }
+            catch (Exception ex)
+            {
+                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
+                await Task.FromException(ex);
+            }
+        }
     }
 
 }

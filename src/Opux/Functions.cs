@@ -1,11 +1,14 @@
-﻿using Discord;
+﻿using ByteSizeLib;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -261,6 +264,39 @@ namespace Opux
         }
         #endregion
 
+        #region About
+        internal static Task About(ICommandContext context)
+        {
+            var test = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Program.ApplicationBase).FullName).FullName).FullName).FullName).FullName;
+            using (var repo = new Repository(test))
+            {
+                var channel = (dynamic)context.Channel;
+                var botid = Program.Client.CurrentUser.Id;
+                var MemoryUsed = Math.Round(ByteSize.FromBytes(Process.GetCurrentProcess().WorkingSet64).MegaBytes, 2);
+                var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
+                var Guilds = Program.Client.Guilds.Count;
+                var TotalUsers = 0;
+                foreach (var guild in Program.Client.Guilds)
+                {
+                    TotalUsers = guild.Users.Count;
+                }
+
+                channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
+                    $"Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
+                    $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Current Version: {repo.Head.Tip.Id}" +
+                    $"```Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}" +
+                    $"Memory Used: {MemoryUsed}{Environment.NewLine}" +
+                    $"Total Guilds Seen: {Guilds}{Environment.NewLine}" +
+                    $"Total Users Seen: {TotalUsers}```" +
+                    $"Invite URL: http://someinviteurl{Environment.NewLine}" +
+                    $"GitHub URL: http://github.com");
+            }
+
+            return Task.CompletedTask;
+        }
+        #endregion
+
         //Time
         #region Time
         internal async static Task EveTime(ICommandContext context)
@@ -294,7 +330,7 @@ namespace Opux
 
             int argPos = 0;
 
-            if (!(message.HasCharPrefix(Program.Settings.GetSection("config")["commandprefix"].ToCharArray()[0], ref argPos) || message.HasMentionPrefix
+            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix
                     (Program.Client.CurrentUser, ref argPos))) return;
 
             var context = new CommandContext(Program.Client, message);
