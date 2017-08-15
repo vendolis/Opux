@@ -8,6 +8,7 @@
 	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 	<Description>Opux is a bot for Discord That manages EVE Online things</Description>
 	<NeutralLanguage>en-GB</NeutralLanguage>
+	<AssemblyName>OpuxPub</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
