@@ -36,7 +36,6 @@ namespace Opux
                 Client = new DiscordSocketClient(new DiscordSocketConfig() { WebSocketProvider = WS4NetProvider.Instance });
                 Commands = new CommandService();
                 EveLib = new EveLib();
-                UpdateSettings();
                 MainAsync(args).GetAwaiter().GetResult();
 
                 Console.ReadKey();
@@ -61,7 +60,6 @@ namespace Opux
             Client.Connected += Functions.Event_Connected;
             Client.Disconnected += Functions.Event_Disconnected;
             Client.GuildAvailable += Functions.Event_GuildAvaliable;
-            Client.UserJoined += Functions.Event_UserJoined;
 
             try
             {
@@ -80,23 +78,6 @@ namespace Opux
             {
                 await Functions.Client_Log(new LogMessage(LogSeverity.Error, "Main", ex.Message, ex));
             }
-        }
-
-        public static Task UpdateSettings()
-        {
-            try
-            {
-                Settings = new ConfigurationBuilder()
-                .SetBasePath(ApplicationBase)
-                .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
-                if (Convert.ToBoolean(Program.Settings.GetSection("config")["notificationFeed"]))
-                    Functions.nextNotificationCheck = DateTime.Parse(Functions.SQLiteDataQuery("cacheData", "data", "nextNotificationCheck").GetAwaiter().GetResult());
-            }
-            catch (Exception ex)
-            {
-                var debug = ex.Message;
-            }
-            return Task.CompletedTask;
         }
     }
 }

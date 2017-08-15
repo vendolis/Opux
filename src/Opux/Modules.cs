@@ -15,7 +15,7 @@ namespace Opux
         public async Task Help()
         {
             var userInfo = Context.Message.Author;
-            await ReplyAsync($"{userInfo.Mention}, Here is a list of plugins available, **!help | !jita | !amarr | !dodixe | !rens | !pc**");
+            await ReplyAsync($"{userInfo.Mention}, Here is a list of plugins available, **!help | !jita | !amarr | !dodixe | !rens | !pc | !evetime**");
         }
 
         /// <summary>
@@ -112,92 +112,6 @@ namespace Opux
         /// 
         /// </summary>
         /// <returns></returns>
-        [Command("rehash", RunMode = RunMode.Async), Summary("Rehash settings file")]
-        [CheckForRole]
-        public async Task About()
-        {
-            try
-            {
-                await Program.UpdateSettings();
-                await ReplyAsync($"{Context.Message.Author.Mention} REHASH COMPLETED");
-            }
-            catch (Exception ex)
-            {
-                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("reauth", RunMode = RunMode.Async), Summary("Reauth all users")]
-        [CheckForRole]
-        public async Task Reauth()
-        {
-            try
-            {
-                await Functions.AuthCheck(Context);
-                await ReplyAsync($"{Context.Message.Author.Mention} REAUTH COMPLETED");
-            }
-            catch (Exception ex)
-            {
-                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                await Task.FromException(ex);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("auth", RunMode = RunMode.Async), Summary("Auth User")]
-        public async Task Auth()
-        {
-            if (Convert.ToBoolean(Program.Settings.GetSection("config")["authWeb"]))
-            {
-                try
-                {
-                    await ReplyAsync($"{Context.Message.Author.Mention} To Auth please vist {(string)Program.Settings.GetSection("auth")["authurl"]} and Login with your main");
-                }
-                catch (Exception ex)
-                {
-                    await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                    await Task.FromException(ex);
-                }
-            }
-            else
-            {
-                await ReplyAsync($"{Context.Message.Author.Mention}, Auth is disabled on this server");
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("auth", RunMode = RunMode.Async), Summary("Auth User")]
-        public async Task Auth([Remainder] string x)
-        {
-            if (Convert.ToBoolean(Program.Settings.GetSection("config")["authWeb"]))
-            {
-                try
-                {
-                    await Functions.AuthUser(Context, x);
-                }
-                catch (Exception ex)
-                {
-                    await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                    await Task.FromException(ex);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         [Command("evetime", RunMode = RunMode.Async), Summary("EVE TQ Time")]
         public async Task EveTime()
         {
@@ -206,46 +120,6 @@ namespace Opux
                 try
                 {
                     await Functions.EveTime(Context);
-                }
-                catch (Exception ex)
-                {
-                    await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                    await Task.FromException(ex);
-                }
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("motd", RunMode = RunMode.Async), Summary("Shows MOTD")]
-        public async Task motd()
-        {
-            if (Convert.ToBoolean(Program.Settings.GetSection("config")["MOTD"]))
-            {
-                try
-                {
-                    await Functions.MOTD(Context);
-                }
-                catch (Exception ex)
-                {
-                    await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                    await Task.FromException(ex);
-                }
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("ops", RunMode = RunMode.Async), Summary("Shows current Fleetup Operations")]
-        public async Task ops()
-        {
-            if (Convert.ToBoolean(Program.Settings.GetSection("config")["fleetup"]))
-            {
-                try
-                {
-                    await Functions.Ops(Context);
                 }
                 catch (Exception ex)
                 {
