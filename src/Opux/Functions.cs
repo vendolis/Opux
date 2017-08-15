@@ -268,8 +268,8 @@ namespace Opux
         #region About
         internal static Task About(ICommandContext context)
         {
-            var test = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Program.ApplicationBase).FullName).FullName).FullName).FullName).FullName;
-            using (var repo = new Repository(test))
+            using (var repo = new Repository(Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(
+                Directory.GetParent(Program.ApplicationBase).FullName).FullName).FullName).FullName).FullName)))
             {
                 var channel = (dynamic)context.Channel;
                 var botid = Program.Client.CurrentUser.Id;
