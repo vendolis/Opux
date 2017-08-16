@@ -62,7 +62,8 @@ namespace Opux
             Client.LoggedIn += Functions.Event_LoggedIn;
             Client.Connected += Functions.Event_Connected;
             Client.Disconnected += Functions.Event_Disconnected;
-            Client.GuildAvailable += Functions.Event_GuildAvaliable;
+            //Client.GuildAvailable += Functions.Event_GuildAvaliable;
+            Client.Ready += Functions.Event_Ready;
 
             try
             {

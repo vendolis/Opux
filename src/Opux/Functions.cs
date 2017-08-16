@@ -115,10 +115,11 @@ namespace Opux
 
         //Events are attached here
         #region EVENTS
-        internal async static Task Event_GuildAvaliable(SocketGuild arg)
+        internal async static Task Event_Ready()
         {
             avaliable = true;
-            await arg.CurrentUser.ModifyAsync(x => x.Nickname = Program.Settings.GetSection("config")["name"]);
+            var user = (ISelfUser) Program.Client.CurrentUser;
+            await user.ModifyAsync(x => x.Username = Program.Settings.GetSection("config")["name"]);
             await Task.CompletedTask;
         }
 
