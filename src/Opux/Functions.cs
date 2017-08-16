@@ -352,7 +352,7 @@ namespace Opux
                     $"Last System: {_lastSystem["name"]}{Environment.NewLine}" +
                     $"Last Ship: {_lastShip["name"]}{Environment.NewLine}" +
                     $"Last Seen: {_lastSeen}{Environment.NewLine}```" +
-                    $"zKill: https://zkillboard.com/character/{id}/");
+                    $"ZKill: https://zkillboard.com/character/{id}/");
             }
             await Task.CompletedTask;
         }
@@ -380,7 +380,8 @@ namespace Opux
                         $"Corp Ticker: {_CorpDetailsContent["ticker"]}{Environment.NewLine}" +
                         $"CEO: {_CEONameContent["name"]}{Environment.NewLine}" +
                         $"Alliance Name: {alliance}{Environment.NewLine}" +
-                        $"Member Count: {_CorpDetailsContent["member_count"]}{Environment.NewLine}```");
+                        $"Member Count: {_CorpDetailsContent["member_count"]}{Environment.NewLine}```" +
+                        $"ZKill: https://zkillboard.com/api/kills/CorporationID/{_corpContent["corporation"][0]}/");
             }
             await Task.CompletedTask;
         }
