@@ -265,6 +265,7 @@ namespace Opux
         }
         #endregion
 
+        //About
         #region About
         internal async static Task About(ICommandContext context)
         {
@@ -297,6 +298,98 @@ namespace Opux
                     //$"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
             //}
 
+            await Task.CompletedTask;
+        }
+        #endregion
+
+        //Char
+        #region Char
+        internal async static Task Char(ICommandContext context, string x)
+        {
+            var channel = (dynamic)context.Channel;
+            using (HttpClient webclient = new HttpClient())
+            using (HttpResponseMessage _characterid = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false"))
+            using (HttpContent _characteridContent = _characterid.Content)
+            {
+                var id = JObject.Parse(await _characteridContent.ReadAsStringAsync())["character"].FirstOrDefault();
+                var _character = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{id}/?datasource=tranquility");
+                var _characterContent = JObject.Parse(await _character.Content.ReadAsStringAsync());
+                var _corp = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_characterContent["corporation_id"]}/?datasource=tranquility");
+                var _corpContent = JObject.Parse(await _corp.Content.ReadAsStringAsync());
+                var _zkill = await webclient.GetAsync($"https://zkillboard.com/api/kills/characterID/{id}/");
+                var _zkillContent = JArray.Parse(await _zkill.Content.ReadAsStringAsync())[0];
+                var lastSystem = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent["solarSystemID"]}/?datasource=tranquility&language=en-us");
+                var _lastSystem = JObject.Parse(await lastSystem.Content.ReadAsStringAsync());
+                var lastShipType = "Unknown";
+                if (_zkillContent["victim"]["characterID"] == id)
+                {
+                    lastShipType = _zkillContent["victim"]["shipTypeID"].ToString();
+                }
+                else
+                {
+                    foreach (var attacker in _zkillContent["attackers"])
+                    {
+                        if ((int)attacker["characterID"] == (int)id)
+                        {
+                            lastShipType = attacker["shipTypeID"].ToString();
+                        }
+                    }
+                }
+
+                var lastShip = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
+                var _lastShip = JObject.Parse(await lastShip.Content.ReadAsStringAsync());
+                var _lastSeen = _zkillContent["killTime"];
+
+                if (!_corpContent["alliance_id"].IsNullOrEmpty())
+                {
+                    var _ally = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_corpContent["alliance_id"]}/?datasource=tranquility");
+                    var _allyContent = JObject.Parse(await _ally.Content.ReadAsStringAsync());
+                    await channel.SendMessageAsync($"```Name: {_characterContent["name"]}{Environment.NewLine}" +
+                        $"DOB: {_characterContent["birthday"]}{Environment.NewLine}{Environment.NewLine}" +
+                        $"Corporation Name: {_corpContent["corporation_name"]}{Environment.NewLine}" +
+                        $"Alliance Name: {_allyContent["alliance_name"]}{Environment.NewLine}{Environment.NewLine}" +
+                        $"Last System: {_lastSystem["name"]}{Environment.NewLine}" +
+                        $"Last Ship: {_lastShip["name"]}{Environment.NewLine}" +
+                        $"Last Seen: {_lastSeen}{Environment.NewLine}```");
+                }
+                else
+                {
+
+                    await channel.SendMessageAsync($"```Name: {_characterContent["name"]}{Environment.NewLine}" +
+                        $"DOB: {_characterContent["birthday"]}{Environment.NewLine}{Environment.NewLine}" +
+                        $"Corporation Name: {_corpContent["corporation_name"]}{Environment.NewLine}{Environment.NewLine}" +
+                        $"{_lastSystem["name"]}{Environment.NewLine}" +
+                        $"{_lastShip["name"]}{Environment.NewLine}" +
+                        $"{_lastSeen}{Environment.NewLine}```");
+                }
+            }
+            await Task.CompletedTask;
+        }
+        #endregion
+
+        //Corp
+        #region Corp
+        internal async static Task Corp(ICommandContext context, string x)
+        {
+            var channel = (dynamic)context.Channel;
+            using (HttpClient webclient = new HttpClient())
+            using (HttpResponseMessage _characterid = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=corporation&datasource=tranquility&language=en-us&search={x}&strict=false"))
+            using (HttpContent _characteridContent = _characterid.Content)
+            {
+                var _corpContent = JObject.Parse(await _characteridContent.ReadAsStringAsync());
+                var _corpDetails = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_corpContent["corporation"][0]}/?datasource=tranquility");
+                var _CorpDetailsContent = JObject.Parse(await _corpDetails.Content.ReadAsStringAsync());
+                var _CEOName = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{_CorpDetailsContent["ceo_id"]}/?datasource=tranquility");
+                var _CEONameContent = JObject.Parse(await _CEOName.Content.ReadAsStringAsync());
+                var _ally = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_CorpDetailsContent["alliance_id"]}/?datasource=tranquility");
+                var _allyContent = JObject.Parse(await _ally.Content.ReadAsStringAsync());
+
+                await channel.SendMessageAsync($"```Corp Name: {_CorpDetailsContent["corporation_name"]}{Environment.NewLine}" +
+                        $"Corp Ticker: {_CorpDetailsContent["ticker"]}{Environment.NewLine}" +
+                        $"CEO: {_CEONameContent["name"]}{Environment.NewLine}" +
+                        $"Alliance Name: {_allyContent["alliance_name"]}{Environment.NewLine}" +
+                        $"Member Count: {_CorpDetailsContent["member_count"]}{Environment.NewLine}```");
+            }
             await Task.CompletedTask;
         }
         #endregion

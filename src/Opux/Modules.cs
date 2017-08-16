@@ -146,6 +146,42 @@ namespace Opux
                 await Task.FromException(ex);
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [Command("char", RunMode = RunMode.Async), Summary("Character Details")]
+        public async Task Char([Remainder] string x)
+        {
+            try
+            {
+                await Functions.Char(Context, x);
+            }
+            catch (Exception ex)
+            {
+                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
+                await Task.FromException(ex);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [Command("corp", RunMode = RunMode.Async), Summary("Corporation Details")]
+        public async Task Corp([Remainder] string x)
+        {
+            try
+            {
+                await Functions.Corp(Context, x);
+            }
+            catch (Exception ex)
+            {
+                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
+                await Task.FromException(ex);
+            }
+        }
     }
 
 }
