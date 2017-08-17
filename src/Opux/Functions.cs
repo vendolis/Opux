@@ -282,7 +282,7 @@ namespace Opux
                 var TotalUsers = 0;
                 foreach (var guild in Program.Client.Guilds)
                 {
-                    TotalUsers = guild.Users.Count;
+                    TotalUsers = TotalUsers + guild.Users.Count;
                 }
 
             channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
@@ -295,7 +295,7 @@ namespace Opux
                 $"Memory Used: {MemoryUsed}MB{Environment.NewLine}" +
                 $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
                 $"Total Users Seen: {TotalUsers}```" +
-                $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id=347078401376649216&scope=bot>{Environment.NewLine}");
+                $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>{Environment.NewLine}");
                     //$"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
             //}
 
