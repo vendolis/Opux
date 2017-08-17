@@ -274,16 +274,16 @@ namespace Opux
                 Directory.GetParent(AppContext.BaseDirectory).FullName).FullName).FullName).FullName).FullName);
             //using (var repo = new Repository(directory))
             //{
-                var channel = (dynamic)context.Channel;
-                var botid = Program.Client.CurrentUser.Id;
-                var MemoryUsed = Math.Round(ByteSize.FromBytes(Process.GetCurrentProcess().WorkingSet64).MegaBytes, 2);
-                var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
-                var Guilds = Program.Client.Guilds.Count;
-                var TotalUsers = 0;
-                foreach (var guild in Program.Client.Guilds)
-                {
-                    TotalUsers = TotalUsers + guild.Users.Count;
-                }
+            var channel = (dynamic)context.Channel;
+            var botid = Program.Client.CurrentUser.Id;
+            var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
+            var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
+            var Guilds = Program.Client.Guilds.Count;
+            var TotalUsers = 0;
+            foreach (var guild in Program.Client.Guilds)
+            {
+                TotalUsers = TotalUsers + guild.Users.Count;
+            }
 
             channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
                 $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
@@ -292,11 +292,11 @@ namespace Opux
                 //$"Current Branch: {repo.Head.FriendlyName}{Environment.NewLine}" +
                 $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
                 $"Statistics:{Environment.NewLine}" +
-                $"Memory Used: {MemoryUsed}MB{Environment.NewLine}" +
+                $"Memory Used: {Math.Round(MemoryUsed.LargestWholeNumberValue, 2)} {MemoryUsed.LargestWholeNumberSymbol}{Environment.NewLine}" +
                 $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
                 $"Total Users Seen: {TotalUsers}```" +
                 $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>{Environment.NewLine}");
-                    //$"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
+            //$"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
             //}
 
             await Task.CompletedTask;
