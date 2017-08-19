@@ -307,41 +307,45 @@ namespace Opux
         #region Char
         internal async static Task Char(ICommandContext context, string x)
         {
-            var channel = (dynamic)context.Channel;
-            using (HttpClient webclient = new HttpClient())
-            using (HttpResponseMessage _characterid = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false"))
+            using (HttpResponseMessage _characterid = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false"))
             using (HttpContent _characteridContent = _characterid.Content)
             {
+                var channel = (dynamic)context.Channel;
                 var id = JObject.Parse(await _characteridContent.ReadAsStringAsync())["character"].FirstOrDefault();
-                var _character = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{id}/?datasource=tranquility");
+                var _character = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{id}/?datasource=tranquility");
                 var _characterContent = JObject.Parse(await _character.Content.ReadAsStringAsync());
-                var _corp = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_characterContent["corporation_id"]}/?datasource=tranquility");
+                var _corp = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_characterContent["corporation_id"]}/?datasource=tranquility");
                 var _corpContent = JObject.Parse(await _corp.Content.ReadAsStringAsync());
-                var _zkill = await webclient.GetAsync($"https://zkillboard.com/api/kills/characterID/{id}/");
-                var _zkillContent = JArray.Parse(await _zkill.Content.ReadAsStringAsync())[0];
-                var lastSystem = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent["solarSystemID"]}/?datasource=tranquility&language=en-us");
-                var _lastSystem = JObject.Parse(await lastSystem.Content.ReadAsStringAsync());
+                var _zkill = await Program.webclient.GetAsync($"https://zkillboard.com/api/kills/characterID/{id}/");
+                var _zkillContent = JArray.Parse(await _zkill.Content.ReadAsStringAsync());
+                var lastSystem = _zkillContent.IsNullOrEmpty() ? null : await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent[0]["solarSystemID"]}/?datasource=tranquility&language=en-us");
+                var lastSystemAsync = lastSystem == null ? "{\"name\": \"Unknown\"}" : await lastSystem.Content.ReadAsStringAsync();
+                var _lastSystem = JObject.Parse(lastSystemAsync);
+
                 var lastShipType = "Unknown";
-                if (_zkillContent["victim"]["characterID"] == id)
+                if (!_zkillContent.IsNullOrEmpty() && _zkillContent[0]["victim"]["characterID"] == id)
                 {
-                    lastShipType = _zkillContent["victim"]["shipTypeID"].ToString();
+                    lastShipType = _zkillContent[0]["victim"]["shipTypeID"].ToString();
                 }
                 else
                 {
-                    foreach (var attacker in _zkillContent["attackers"])
+                    if (!_zkillContent.IsNullOrEmpty())
                     {
-                        if ((int)attacker["characterID"] == (int)id)
+                        foreach (var attacker in _zkillContent[0]["attackers"])
                         {
-                            lastShipType = attacker["shipTypeID"].ToString();
+                            if ((int)attacker["characterID"] == (int)id)
+                            {
+                                lastShipType = attacker["shipTypeID"].ToString();
+                            }
                         }
                     }
                 }
 
-                var lastShip = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
-                var _lastShip = JObject.Parse(await lastShip.Content.ReadAsStringAsync());
-                var _lastSeen = _zkillContent["killTime"];
+                var lastShip = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
+                var _lastShip = _zkillContent.IsNullOrEmpty() ? "Unknown" : JObject.Parse(await lastShip.Content.ReadAsStringAsync())["name"];
+                var _lastSeen = _zkillContent.IsNullOrEmpty() ? "Unknown" : _zkillContent[0]["killTime"];
 
-                var _ally = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_corpContent["alliance_id"]}/?datasource=tranquility");
+                var _ally = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_corpContent["alliance_id"]}/?datasource=tranquility");
                 var _allyContent = JObject.Parse(await _ally.Content.ReadAsStringAsync());
                 var alliance = _allyContent["alliance_name"].IsNullOrEmpty() ? "None" : _allyContent["alliance_name"];
 
@@ -350,9 +354,12 @@ namespace Opux
                     $"Corporation Name: {_corpContent["corporation_name"]}{Environment.NewLine}" +
                     $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
                     $"Last System: {_lastSystem["name"]}{Environment.NewLine}" +
-                    $"Last Ship: {_lastShip["name"]}{Environment.NewLine}" +
+                    $"Last Ship: {_lastShip}{Environment.NewLine}" +
                     $"Last Seen: {_lastSeen}{Environment.NewLine}```" +
                     $"ZKill: https://zkillboard.com/character/{id}/");
+
+                
+
             }
             await Task.CompletedTask;
         }
