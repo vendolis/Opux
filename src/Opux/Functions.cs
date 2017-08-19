@@ -318,7 +318,7 @@ namespace Opux
                 var _corpContent = JObject.Parse(await _corp.Content.ReadAsStringAsync());
                 var _zkill = await Program.webclient.GetAsync($"https://zkillboard.com/api/kills/characterID/{id}/");
                 var _zkillContent = JArray.Parse(await _zkill.Content.ReadAsStringAsync());
-                var lastSystem = _zkillContent.IsNullOrEmpty() ? null : await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent[0]["solarSystemID"]}/?datasource=tranquility&language=en-us");
+                var lastSystem = _zkillContent.IsNullOrEmpty() || !_zkillContent[0].HasValues ? null : await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent[0]["solarSystemID"]}/?datasource=tranquility&language=en-us");
                 var lastSystemAsync = lastSystem == null ? "{\"name\": \"Unknown\"}" : await lastSystem.Content.ReadAsStringAsync();
                 var _lastSystem = JObject.Parse(lastSystemAsync);
 
