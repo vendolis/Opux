@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace Opux
     {
         internal static bool avaliable = false;
         internal static bool running = false;
+        static readonly HttpClient _httpClient = new HttpClient();
 
         //Timer is setup here
         #region Timer stuff
@@ -307,60 +309,56 @@ namespace Opux
         #region Char
         internal async static Task Char(ICommandContext context, string x)
         {
-            using (HttpResponseMessage _characterid = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false"))
-            using (HttpContent _characteridContent = _characterid.Content)
-            {
-                var channel = (dynamic)context.Channel;
-                var id = JObject.Parse(await _characteridContent.ReadAsStringAsync())["character"].FirstOrDefault();
-                var _character = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{id}/?datasource=tranquility");
-                var _characterContent = JObject.Parse(await _character.Content.ReadAsStringAsync());
-                var _corp = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_characterContent["corporation_id"]}/?datasource=tranquility");
-                var _corpContent = JObject.Parse(await _corp.Content.ReadAsStringAsync());
-                var _zkill = await Program.webclient.GetAsync($"https://zkillboard.com/api/kills/characterID/{id}/");
-                var _zkillContent = JArray.Parse(await _zkill.Content.ReadAsStringAsync());
-                var lastSystem = _zkillContent.IsNullOrEmpty() || !_zkillContent[0].HasValues ? null : await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{_zkillContent[0]["solarSystemID"]}/?datasource=tranquility&language=en-us");
-                var lastSystemAsync = lastSystem == null ? "{\"name\": \"Unknown\"}" : await lastSystem.Content.ReadAsStringAsync();
-                var _lastSystem = JObject.Parse(lastSystemAsync);
+            var channel = context.Channel;
+            var responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false");
+            var characterID = JsonConvert.DeserializeObject<CharacterID>(await responceMessage.Content.ReadAsStringAsync()).character.FirstOrDefault();
+            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{characterID}/?datasource=tranquility");
+            var characterData = JsonConvert.DeserializeObject<CharacterData>(await responceMessage.Content.ReadAsStringAsync());
+            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{characterData.corporation_id}/?datasource=tranquility");
+            var corporationData = JsonConvert.DeserializeObject<CorporationData>(await responceMessage.Content.ReadAsStringAsync());
+            responceMessage = await _httpClient.GetAsync($"https://zkillboard.com/api/kills/characterID/{characterID}/");
+            var zkillContent = JsonConvert.DeserializeObject<List<Kill>>(await responceMessage.Content.ReadAsStringAsync());
+            Kill zkillLast = zkillContent.Count > 0 ? zkillContent[0] : new Kill();
 
-                var lastShipType = "Unknown";
-                if (!_zkillContent.IsNullOrEmpty() && _zkillContent[0]["victim"]["characterID"] == id)
+            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{zkillLast.solarSystemID}/?datasource=tranquility&language=en-us");
+            var systemData = JsonConvert.DeserializeObject<SystemData>(await responceMessage.Content.ReadAsStringAsync());
+
+            var lastShipType = "Unknown";
+
+            if (zkillLast.victim != null && zkillLast.victim.characterID == characterID)
+            {
+                lastShipType = zkillLast.victim.shipTypeID.ToString();
+            }
+            else if (zkillLast.victim != null)
+            {
+                foreach (var attacker in zkillLast.attackers)
                 {
-                    lastShipType = _zkillContent[0]["victim"]["shipTypeID"].ToString();
-                }
-                else
-                {
-                    if (!_zkillContent.IsNullOrEmpty())
+                    if (attacker.characterID == characterID)
                     {
-                        foreach (var attacker in _zkillContent[0]["attackers"])
-                        {
-                            if ((int)attacker["characterID"] == (int)id)
-                            {
-                                lastShipType = attacker["shipTypeID"].ToString();
-                            }
-                        }
+                        lastShipType = attacker.shipTypeID.ToString();
                     }
                 }
-
-                var lastShip = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
-                var _lastShip = _zkillContent.IsNullOrEmpty() ? "Unknown" : JObject.Parse(await lastShip.Content.ReadAsStringAsync())["name"];
-                var _lastSeen = _zkillContent.IsNullOrEmpty() ? "Unknown" : _zkillContent[0]["killTime"];
-
-                var _ally = await Program.webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_corpContent["alliance_id"]}/?datasource=tranquility");
-                var _allyContent = JObject.Parse(await _ally.Content.ReadAsStringAsync());
-                var alliance = _allyContent["alliance_name"].IsNullOrEmpty() ? "None" : _allyContent["alliance_name"];
-
-                await channel.SendMessageAsync($"```Name: {_characterContent["name"]}{Environment.NewLine}" +
-                    $"DOB: {_characterContent["birthday"]}{Environment.NewLine}{Environment.NewLine}" +
-                    $"Corporation Name: {_corpContent["corporation_name"]}{Environment.NewLine}" +
-                    $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
-                    $"Last System: {_lastSystem["name"]}{Environment.NewLine}" +
-                    $"Last Ship: {_lastShip}{Environment.NewLine}" +
-                    $"Last Seen: {_lastSeen}{Environment.NewLine}```" +
-                    $"ZKill: https://zkillboard.com/character/{id}/");
-
-                
-
             }
+
+            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
+            var lastShip = JsonConvert.DeserializeObject<Ship>(await responceMessage.Content.ReadAsStringAsync());
+            var lastSeen = zkillLast.killTime;
+
+            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{characterData.alliance_id}/?datasource=tranquility");
+            var allianceData = JsonConvert.DeserializeObject<AllianceData>(await responceMessage.Content.ReadAsStringAsync());
+            var alliance = allianceData.alliance_name == null ? "None" : allianceData.alliance_name;
+
+            await channel.SendMessageAsync($"```Name: {characterData.name}{Environment.NewLine}" +
+                $"DOB: {characterData.birthday}{Environment.NewLine}{Environment.NewLine}" +
+                $"Corporation Name: {corporationData.corporation_name}{Environment.NewLine}" +
+                $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
+                $"Last System: {systemData.name}{Environment.NewLine}" +
+                $"Last Ship: {lastShip.name}{Environment.NewLine}" +
+                $"Last Seen: {lastSeen}{Environment.NewLine}```" +
+                $"ZKill: https://zkillboard.com/character/{characterID}/");
+
+            responceMessage.Dispose();
+
             await Task.CompletedTask;
         }
         #endregion
@@ -648,4 +646,351 @@ namespace Opux
     }
     #endregion
 
+    public class CharacterID
+
+    {
+
+        public int[] character { get; set; }
+
+    }
+
+
+
+
+
+    public class CharacterData
+
+    {
+
+        public int corporation_id { get; set; }
+
+        public DateTime birthday { get; set; }
+
+        public string name { get; set; }
+
+        public string gender { get; set; }
+
+        public int race_id { get; set; }
+
+        public int bloodline_id { get; set; }
+
+        public string description { get; set; }
+
+        public int alliance_id { get; set; }
+
+        public int ancestry_id { get; set; }
+
+        public float security_status { get; set; }
+
+    }
+
+
+
+    public class CorporationData
+
+    {
+
+        public string corporation_name { get; set; }
+
+        public string ticker { get; set; }
+
+        public int member_count { get; set; }
+
+        public int ceo_id { get; set; }
+
+        public string corporation_description { get; set; }
+
+        public float tax_rate { get; set; }
+
+        public int creator_id { get; set; }
+
+        public string url { get; set; }
+
+        public int alliance_id { get; set; }
+
+        public DateTime creation_date { get; set; }
+
+    }
+
+
+
+    public class ZKill
+
+    {
+
+        public Kill[] kill { get; set; }
+
+    }
+
+
+
+    public class Kill
+
+    {
+
+        public int killID { get; set; }
+
+        public int solarSystemID { get; set; }
+
+        public string killTime { get; set; }
+
+        public int moonID { get; set; }
+
+        public Victim victim { get; set; }
+
+        public Attacker[] attackers { get; set; }
+
+        public Item[] items { get; set; }
+
+        public PositionData position { get; set; }
+
+        public Zkb zkb { get; set; }
+
+    }
+
+
+
+    public class Victim
+
+    {
+
+        public int shipTypeID { get; set; }
+
+        public int characterID { get; set; }
+
+        public string characterName { get; set; }
+
+        public int corporationID { get; set; }
+
+        public string corporationName { get; set; }
+
+        public int allianceID { get; set; }
+
+        public string allianceName { get; set; }
+
+        public int factionID { get; set; }
+
+        public string factionName { get; set; }
+
+        public int damageTaken { get; set; }
+
+    }
+
+
+
+    public class Zkb
+
+    {
+
+        public int locationID { get; set; }
+
+        public string hash { get; set; }
+
+        public float fittedValue { get; set; }
+
+        public float totalValue { get; set; }
+
+        public int points { get; set; }
+
+        public bool npc { get; set; }
+
+    }
+
+
+
+    public class Attacker
+
+    {
+
+        public int characterID { get; set; }
+
+        public string characterName { get; set; }
+
+        public int corporationID { get; set; }
+
+        public string corporationName { get; set; }
+
+        public int allianceID { get; set; }
+
+        public string allianceName { get; set; }
+
+        public int factionID { get; set; }
+
+        public string factionName { get; set; }
+
+        public float securityStatus { get; set; }
+
+        public int damageDone { get; set; }
+
+        public int finalBlow { get; set; }
+
+        public int weaponTypeID { get; set; }
+
+        public int shipTypeID { get; set; }
+
+    }
+
+
+
+    public class Item
+
+    {
+
+        public int typeID { get; set; }
+
+        public int flag { get; set; }
+
+        public int qtyDropped { get; set; }
+
+        public int qtyDestroyed { get; set; }
+
+        public int singleton { get; set; }
+
+        public Item1[] items { get; set; }
+
+    }
+
+
+
+    public class Item1
+
+    {
+
+        public int typeID { get; set; }
+
+        public int flag { get; set; }
+
+        public int qtyDropped { get; set; }
+
+        public int qtyDestroyed { get; set; }
+
+        public int singleton { get; set; }
+
+    }
+
+
+
+
+
+    public class Ship
+
+    {
+
+        public int type_id { get; set; }
+
+        public string name { get; set; }
+
+        public string description { get; set; }
+
+        public bool published { get; set; }
+
+        public int group_id { get; set; }
+
+        public float radius { get; set; }
+
+        public float volume { get; set; }
+
+        public float capacity { get; set; }
+
+        public int portion_size { get; set; }
+
+        public float mass { get; set; }
+
+        public int graphic_id { get; set; }
+
+        public Dogma_Attributes[] dogma_attributes { get; set; }
+
+        public Dogma_Effects[] dogma_effects { get; set; }
+
+    }
+
+
+
+    public class Dogma_Attributes
+
+    {
+
+        public int attribute_id { get; set; }
+
+        public float value { get; set; }
+
+    }
+
+
+
+    public class Dogma_Effects
+
+    {
+
+        public int effect_id { get; set; }
+
+        public bool is_default { get; set; }
+
+    }
+
+
+
+
+
+    public class AllianceData
+
+    {
+
+        public string alliance_name { get; set; }
+
+        public string ticker { get; set; }
+
+        public DateTime date_founded { get; set; }
+
+        public int executor_corp { get; set; }
+
+    }
+
+
+
+    public class SystemData
+
+    {
+
+        public int system_id { get; set; }
+
+        public string name { get; set; }
+
+        public PositionData position { get; set; }
+
+        public float security_status { get; set; }
+
+        public int constellation_id { get; set; }
+
+        public PlanetData[] planets { get; set; }
+
+        public int[] stargates { get; set; }
+
+        public string security_class { get; set; }
+
+    }
+
+    public class PositionData
+
+    {
+
+        public float x { get; set; }
+
+        public float y { get; set; }
+
+        public float z { get; set; }
+
+    }
+
+
+
+    public class PlanetData
+
+    {
+
+        public int planet_id { get; set; }
+
+        public int[] moons { get; set; }
+
+    }
 }
