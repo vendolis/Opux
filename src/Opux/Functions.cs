@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static Opux.JsonClasses;
 
 namespace Opux
 {
@@ -272,34 +273,34 @@ namespace Opux
         #region About
         internal async static Task About(ICommandContext context)
         {
-            var directory = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(
-                Directory.GetParent(AppContext.BaseDirectory).FullName).FullName).FullName).FullName).FullName);
-            //using (var repo = new Repository(directory))
-            //{
-            var channel = (dynamic)context.Channel;
-            var botid = Program.Client.CurrentUser.Id;
-            var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
-            var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
-            var Guilds = Program.Client.Guilds.Count;
-            var TotalUsers = 0;
-            foreach (var guild in Program.Client.Guilds)
+            var directory = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(
+                Directory.GetParent(AppContext.BaseDirectory).FullName).FullName).FullName).FullName).FullName).FullName);
+            using (var repo = new Repository(directory))
             {
-                TotalUsers = TotalUsers + guild.Users.Count;
-            }
+                var channel = (dynamic)context.Channel;
+                var botid = Program.Client.CurrentUser.Id;
+                var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
+                var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
+                var Guilds = Program.Client.Guilds.Count;
+                var TotalUsers = 0;
+                foreach (var guild in Program.Client.Guilds)
+                {
+                    TotalUsers = TotalUsers + guild.Users.Count;
+                }
 
-            channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
-                $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
-                $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
-                //$"Current Version: {repo.Head.Tip.Id}{Environment.NewLine}" +
-                //$"Current Branch: {repo.Head.FriendlyName}{Environment.NewLine}" +
-                $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
-                $"Statistics:{Environment.NewLine}" +
-                $"Memory Used: {Math.Round(MemoryUsed.LargestWholeNumberValue, 2)} {MemoryUsed.LargestWholeNumberSymbol}{Environment.NewLine}" +
-                $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
-                $"Total Users Seen: {TotalUsers}```" +
-                $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>{Environment.NewLine}");
-            //$"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
-            //}
+                channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
+                    $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
+                    $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Current Version: {repo.Head.Tip.Id}{Environment.NewLine}" +
+                    $"Current Branch: {repo.Head.FriendlyName}{Environment.NewLine}" +
+                    $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Statistics:{Environment.NewLine}" +
+                    $"Memory Used: {Math.Round(MemoryUsed.LargestWholeNumberValue, 2)} {MemoryUsed.LargestWholeNumberSymbol}{Environment.NewLine}" +
+                    $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
+                    $"Total Users Seen: {TotalUsers}```" +
+                    $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>{Environment.NewLine}" +
+                    $"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
+            }
 
             await Task.CompletedTask;
         }
@@ -310,50 +311,50 @@ namespace Opux
         internal async static Task Char(ICommandContext context, string x)
         {
             var channel = context.Channel;
-            var responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false");
-            var characterID = JsonConvert.DeserializeObject<CharacterID>(await responceMessage.Content.ReadAsStringAsync()).character.FirstOrDefault();
-            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{characterID}/?datasource=tranquility");
+            var responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false");
+            var characterID = JsonConvert.DeserializeObject<CharacterID>(await responceMessage.Content.ReadAsStringAsync()).Character.FirstOrDefault();
+            responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{characterID}/?datasource=tranquility");
             var characterData = JsonConvert.DeserializeObject<CharacterData>(await responceMessage.Content.ReadAsStringAsync());
-            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{characterData.corporation_id}/?datasource=tranquility");
+            responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{characterData.Corporation_id}/?datasource=tranquility");
             var corporationData = JsonConvert.DeserializeObject<CorporationData>(await responceMessage.Content.ReadAsStringAsync());
-            responceMessage = await _httpClient.GetAsync($"https://zkillboard.com/api/kills/characterID/{characterID}/");
+            responceMessage = await Program._httpClient.GetAsync($"https://zkillboard.com/api/kills/characterID/{characterID}/");
             var zkillContent = JsonConvert.DeserializeObject<List<Kill>>(await responceMessage.Content.ReadAsStringAsync());
             Kill zkillLast = zkillContent.Count > 0 ? zkillContent[0] : new Kill();
 
-            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{zkillLast.solarSystemID}/?datasource=tranquility&language=en-us");
+            responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{zkillLast.SolarSystemID}/?datasource=tranquility&language=en-us");
             var systemData = JsonConvert.DeserializeObject<SystemData>(await responceMessage.Content.ReadAsStringAsync());
 
             var lastShipType = "Unknown";
 
-            if (zkillLast.victim != null && zkillLast.victim.characterID == characterID)
+            if (zkillLast.Victim != null && zkillLast.Victim.CharacterID == characterID)
             {
-                lastShipType = zkillLast.victim.shipTypeID.ToString();
+                lastShipType = zkillLast.Victim.ShipTypeID.ToString();
             }
-            else if (zkillLast.victim != null)
+            else if (zkillLast.Victim != null)
             {
-                foreach (var attacker in zkillLast.attackers)
+                foreach (var attacker in zkillLast.Attackers)
                 {
-                    if (attacker.characterID == characterID)
+                    if (attacker.CharacterID == characterID)
                     {
-                        lastShipType = attacker.shipTypeID.ToString();
+                        lastShipType = attacker.ShipTypeID.ToString();
                     }
                 }
             }
 
-            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
+            responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
             var lastShip = JsonConvert.DeserializeObject<Ship>(await responceMessage.Content.ReadAsStringAsync());
-            var lastSeen = zkillLast.killTime;
+            var lastSeen = zkillLast.KillTime;
 
-            responceMessage = await _httpClient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{characterData.alliance_id}/?datasource=tranquility");
+            responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{characterData.Alliance_id}/?datasource=tranquility");
             var allianceData = JsonConvert.DeserializeObject<AllianceData>(await responceMessage.Content.ReadAsStringAsync());
-            var alliance = allianceData.alliance_name == null ? "None" : allianceData.alliance_name;
+            var alliance = allianceData.Alliance_name ?? "None";
 
-            await channel.SendMessageAsync($"```Name: {characterData.name}{Environment.NewLine}" +
-                $"DOB: {characterData.birthday}{Environment.NewLine}{Environment.NewLine}" +
-                $"Corporation Name: {corporationData.corporation_name}{Environment.NewLine}" +
+            await channel.SendMessageAsync($"```Name: {characterData.Name}{Environment.NewLine}" +
+                $"DOB: {characterData.Birthday}{Environment.NewLine}{Environment.NewLine}" +
+                $"Corporation Name: {corporationData.Corporation_name}{Environment.NewLine}" +
                 $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
-                $"Last System: {systemData.name}{Environment.NewLine}" +
-                $"Last Ship: {lastShip.name}{Environment.NewLine}" +
+                $"Last System: {systemData.Name}{Environment.NewLine}" +
+                $"Last Ship: {lastShip.Name}{Environment.NewLine}" +
                 $"Last Seen: {lastSeen}{Environment.NewLine}```" +
                 $"ZKill: https://zkillboard.com/character/{characterID}/");
 
@@ -367,27 +368,33 @@ namespace Opux
         #region Corp
         internal async static Task Corp(ICommandContext context, string x)
         {
-            var channel = (dynamic)context.Channel;
-            using (HttpClient webclient = new HttpClient())
-            using (HttpResponseMessage _characterid = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=corporation&datasource=tranquility&language=en-us&search={x}&strict=false"))
-            using (HttpContent _characteridContent = _characterid.Content)
-            {
-                var _corpContent = JObject.Parse(await _characteridContent.ReadAsStringAsync());
-                var _corpDetails = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{_corpContent["corporation"][0]}/?datasource=tranquility");
-                var _CorpDetailsContent = JObject.Parse(await _corpDetails.Content.ReadAsStringAsync());
-                var _CEOName = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{_CorpDetailsContent["ceo_id"]}/?datasource=tranquility");
-                var _CEONameContent = JObject.Parse(await _CEOName.Content.ReadAsStringAsync());
-                var _ally = await webclient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{_CorpDetailsContent["alliance_id"]}/?datasource=tranquility");
-                var _allyContent = JObject.Parse(await _ally.Content.ReadAsStringAsync());
-                var alliance = _allyContent["alliance_name"].IsNullOrEmpty() ? "None" : _allyContent["alliance_name"];
+            var channel = context.Channel;
+            var responceMessage = await Program._httpClient.GetStringAsync(
+                $"https://esi.tech.ccp.is/latest/search/?categories=corporation&datasource=tranquility&language=en-us&search={x}&strict=true");
+            var corpContent = JsonConvert.DeserializeObject<CorporationSearch>(responceMessage);
 
-                await channel.SendMessageAsync($"```Corp Name: {_CorpDetailsContent["corporation_name"]}{Environment.NewLine}" +
-                        $"Corp Ticker: {_CorpDetailsContent["ticker"]}{Environment.NewLine}" +
-                        $"CEO: {_CEONameContent["name"]}{Environment.NewLine}" +
-                        $"Alliance Name: {alliance}{Environment.NewLine}" +
-                        $"Member Count: {_CorpDetailsContent["member_count"]}{Environment.NewLine}```" +
-                        $"ZKill: https://zkillboard.com/corporation/{_corpContent["corporation"][0]}/");
+            if (corpContent.Corporation == null)
+            {
+                await channel.SendMessageAsync($"{context.User.Mention}, Corp not found please try again");
             }
+            else
+            {
+                responceMessage = await Program._httpClient.GetStringAsync($"https://esi.tech.ccp.is/latest/corporations/{corpContent.Corporation[0]}/?datasource=tranquility");
+                var CorpDetailsContent = JsonConvert.DeserializeObject<CorporationData>(responceMessage);
+                responceMessage = await Program._httpClient.GetStringAsync($"https://esi.tech.ccp.is/latest/characters/{CorpDetailsContent.Ceo_id}/?datasource=tranquility");
+                var CEONameContent = JsonConvert.DeserializeObject<CharacterData>(responceMessage);
+                responceMessage = await Program._httpClient.GetStringAsync($"https://esi.tech.ccp.is/latest/alliances/{CorpDetailsContent.Alliance_id}/?datasource=tranquility");
+                var allyContent = JsonConvert.DeserializeObject<AllianceData>(responceMessage);
+                var alliance = allyContent.Alliance_name;
+
+                await channel.SendMessageAsync($"```Corp Name: {CorpDetailsContent.Corporation_name}{Environment.NewLine}" +
+                        $"Corp Ticker: {CorpDetailsContent.Ticker}{Environment.NewLine}" +
+                        $"CEO: {CEONameContent.Name}{Environment.NewLine}" +
+                        $"Alliance Name: {alliance}{Environment.NewLine}" +
+                        $"Member Count: {CorpDetailsContent.Member_count}{Environment.NewLine}```" +
+                        $"ZKill: https://zkillboard.com/corporation/{corpContent.Corporation[0]}/");
+            }
+
             await Task.CompletedTask;
         }
         #endregion

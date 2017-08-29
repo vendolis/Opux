@@ -22,7 +22,7 @@ namespace Opux
         public static String ApplicationBase { get; private set; }
         public static IServiceProvider ServiceCollection { get; private set; }
         public static IConfigurationRoot Settings { get; private set; }
-        public static HttpClient webclient = new HttpClient();
+        public static HttpClient _httpClient = new HttpClient();
         public static HttpResponseMessage httpResponseMessage;
         public static HttpContent httpContent;
 
