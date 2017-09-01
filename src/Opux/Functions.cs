@@ -273,12 +273,9 @@ namespace Opux
         #region About
         internal async static Task About(ICommandContext context)
         {
-            var directory = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(
-                Directory.GetParent(AppContext.BaseDirectory).FullName).FullName).FullName).FullName).FullName).FullName);
-
             var channel = (dynamic)context.Channel;
             var botid = Program.Client.CurrentUser.Id;
-            var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
+            var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().WorkingSet64);
             var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
             var Guilds = Program.Client.Guilds.Count;
             var TotalUsers = 0;
