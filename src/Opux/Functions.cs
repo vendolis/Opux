@@ -275,32 +275,28 @@ namespace Opux
         {
             var directory = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetParent(
                 Directory.GetParent(AppContext.BaseDirectory).FullName).FullName).FullName).FullName).FullName).FullName);
-            using (var repo = new Repository(directory))
-            {
-                var channel = (dynamic)context.Channel;
-                var botid = Program.Client.CurrentUser.Id;
-                var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
-                var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
-                var Guilds = Program.Client.Guilds.Count;
-                var TotalUsers = 0;
-                foreach (var guild in Program.Client.Guilds)
-                {
-                    TotalUsers = TotalUsers + guild.Users.Count;
-                }
 
-                channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
-                    $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
-                    $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
-                    $"Current Version: {repo.Head.Tip.Id}{Environment.NewLine}" +
-                    $"Current Branch: {repo.Head.FriendlyName}{Environment.NewLine}" +
-                    $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
-                    $"Statistics:{Environment.NewLine}" +
-                    $"Memory Used: {Math.Round(MemoryUsed.LargestWholeNumberValue, 2)} {MemoryUsed.LargestWholeNumberSymbol}{Environment.NewLine}" +
-                    $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
-                    $"Total Users Seen: {TotalUsers}```" +
-                    $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>{Environment.NewLine}" +
-                    $"GitHub URL: <{repo.Config.ToList().FirstOrDefault(x => x.Key == "remote.origin.url").Value}>");
+            var channel = (dynamic)context.Channel;
+            var botid = Program.Client.CurrentUser.Id;
+            var MemoryUsed = ByteSize.FromBytes(Process.GetCurrentProcess().PrivateMemorySize64);
+            var RunTime = DateTime.Now - Process.GetCurrentProcess().StartTime;
+            var Guilds = Program.Client.Guilds.Count;
+            var TotalUsers = 0;
+            foreach (var guild in Program.Client.Guilds)
+            {
+                TotalUsers = TotalUsers + guild.Users.Count;
             }
+
+            channel.SendMessageAsync($"{context.User.Mention},{Environment.NewLine}{Environment.NewLine}" +
+                $"```Developer: Jimmy06 (In-game Name: Jimmy06){Environment.NewLine}{Environment.NewLine}" +
+                $"Bot ID: {botid}{Environment.NewLine}{Environment.NewLine}" +
+                $"Run Time: {RunTime.Days}:{RunTime.Hours}:{RunTime.Minutes}:{RunTime.Seconds}{Environment.NewLine}{Environment.NewLine}" +
+                $"Statistics:{Environment.NewLine}" +
+                $"Memory Used: {Math.Round(MemoryUsed.LargestWholeNumberValue, 2)} {MemoryUsed.LargestWholeNumberSymbol}{Environment.NewLine}" +
+                $"Total Connected Guilds: {Guilds}{Environment.NewLine}" +
+                $"Total Users Seen: {TotalUsers}```" +
+                $"Invite URL: <https://discordapp.com/oauth2/authorize?&client_id={botid}&scope=bot>");
+
 
             await Task.CompletedTask;
         }
@@ -312,7 +308,7 @@ namespace Opux
         {
             var channel = context.Channel;
             var responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=false");
-            var characterID = JsonConvert.DeserializeObject<CharacterID>(await responceMessage.Content.ReadAsStringAsync()).Character.FirstOrDefault();
+            var characterID = JsonConvert.DeserializeObject<CharacterID>(await responceMessage.Content.ReadAsStringAsync());
             responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{characterID}/?datasource=tranquility");
             var characterData = JsonConvert.DeserializeObject<CharacterData>(await responceMessage.Content.ReadAsStringAsync());
             responceMessage = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{characterData.Corporation_id}/?datasource=tranquility");
@@ -326,7 +322,7 @@ namespace Opux
 
             var lastShipType = "Unknown";
 
-            if (zkillLast.Victim != null && zkillLast.Victim.CharacterID == characterID)
+            if (zkillLast.Victim != null && zkillLast.Victim.CharacterID == characterID.Character[0])
             {
                 lastShipType = zkillLast.Victim.ShipTypeID.ToString();
             }
@@ -334,7 +330,7 @@ namespace Opux
             {
                 foreach (var attacker in zkillLast.Attackers)
                 {
-                    if (attacker.CharacterID == characterID)
+                    if (attacker.CharacterID == characterID.Character[0])
                     {
                         lastShipType = attacker.ShipTypeID.ToString();
                     }
@@ -356,7 +352,7 @@ namespace Opux
                 $"Last System: {systemData.Name}{Environment.NewLine}" +
                 $"Last Ship: {lastShip.Name}{Environment.NewLine}" +
                 $"Last Seen: {lastSeen}{Environment.NewLine}```" +
-                $"ZKill: https://zkillboard.com/character/{characterID}/");
+                $"ZKill: https://zkillboard.com/character/{characterID.Character[0]}/");
 
             responceMessage.Dispose();
 
