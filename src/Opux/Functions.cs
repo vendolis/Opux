@@ -153,117 +153,112 @@ namespace Opux
         #region Pricecheck
         internal async static Task PriceCheck(ICommandContext context, string String, string system)
         {
-            var NametoId = "https://www.fuzzwork.co.uk/api/typeid.php?typename=";
+            //var NametoId = "https://esi.tech.ccp.is/latest/search/?categories=inventorytype&datasource=tranquility&language=en-us&search=Plex&strict=true";
 
-            using (HttpClient webClient = new HttpClient())
+            var channel = context.Message.Channel;
+            if (String.ToLower() == "short name")
             {
-                JObject jObject = new JObject();
-                var channel = (ITextChannel)context.Message.Channel;
-                if (String.ToLower() == "short name")
-                {
-                    String = "Item Name";
-                }
+                String = "Item Name";
+            }
 
-                var reply = await webClient.GetStringAsync(NametoId + String);
-                jObject = JObject.Parse(reply);
-                if ((string)jObject["typeName"] == "bad item")
+            var result = await Program._httpClient.GetStringAsync($"https://esi.tech.ccp.is/latest/search/?categories=inventorytype&datasource=tranquility&language=en-us&search={String}&strict=true");
+
+            var searchResults = JsonConvert.DeserializeObject<SearchInventoryType>(result);
+
+            if (string.IsNullOrWhiteSpace(searchResults.Inventorytype.ToString()))
+            {
+                await channel.SendMessageAsync($"{context.Message.Author.Mention} Item {String} does not exist please try again");
+
+            }
+            else
+            {
+                try
                 {
-                    await channel.SendMessageAsync($"{context.Message.Author.Mention} Item {String} does not exist please try again");
-                    await Task.CompletedTask;
+                    var url = "https://api.evemarketer.com/ec";
+                    if (system == "")
+                    {
+                        var eveCentralReply = await Program._httpClient.GetStringAsync($"{url}/marketstat/json?typeid={searchResults.Inventorytype[0]}");
+                        var centralreply = JsonConvert.DeserializeObject<List<Items>>(eveCentralReply)[0];
+                        await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
+                        await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Universe**{Environment.NewLine}" +
+                            $"**Buy:**{Environment.NewLine}" +
+                            $"```Low: {centralreply.Buy.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Buy.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Buy.Max:n2}```" +
+                            $"{Environment.NewLine}" +
+                            $"**Sell**:{Environment.NewLine}" +
+                            $"```Low: {centralreply.Sell.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Sell.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Sell.Max:n2}```");
+                    }
+                    if (system == "jita")
+                    {
+                        var eveCentralReply = await Program._httpClient.GetStringAsync($"{url}/marketstat/json?typeid={searchResults.Inventorytype[0]}&usesystem=30000142");
+                        var centralreply = JsonConvert.DeserializeObject<List<Items>>(eveCentralReply)[0];
+                        await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
+                        await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Jita**{Environment.NewLine}" +
+                            $"**Buy:**{Environment.NewLine}" +
+                            $"```Low: {centralreply.Buy.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Buy.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Buy.Max:n2}```" +
+                            $"{Environment.NewLine}" +
+                            $"**Sell**:{Environment.NewLine}" +
+                            $"```Low: {centralreply.Sell.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Sell.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Sell.Max:n2}```");
+                    }
+                    if (system == "amarr")
+                    {
+                        var eveCentralReply = await Program._httpClient.GetStringAsync($"{url}/marketstat/json?typeid={searchResults.Inventorytype[0]}&usesystem=30002187");
+                        var centralreply = JsonConvert.DeserializeObject<List<Items>>(eveCentralReply)[0];
+                        await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
+                        await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Amarr**{Environment.NewLine}" +
+                            $"**Buy:**{Environment.NewLine}" +
+                            $"```Low: {centralreply.Buy.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Buy.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Buy.Max:n2}```" +
+                            $"{Environment.NewLine}" +
+                            $"**Sell**:{Environment.NewLine}" +
+                            $"```Low: {centralreply.Sell.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Sell.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Sell.Max:n2}```");
+                    }
+                    if (system == "rens")
+                    {
+                        var eveCentralReply = await Program._httpClient.GetStringAsync($"{url}/marketstat/json?typeid={searchResults.Inventorytype[0]}&usesystem=30002510");
+                        var centralreply = JsonConvert.DeserializeObject<List<Items>>(eveCentralReply)[0];
+                        await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
+                        await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Rens**{Environment.NewLine}" +
+                            $"**Buy:**{Environment.NewLine}" +
+                            $"```Low: {centralreply.Buy.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Buy.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Buy.Max:n2}```" +
+                            $"{Environment.NewLine}" +
+                            $"**Sell**:{Environment.NewLine}" +
+                            $"```Low: {centralreply.Sell.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Sell.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Sell.Max:n2}```");
+                    }
+                    if (system == "dodixie")
+                    {
+                        var eveCentralReply = await Program._httpClient.GetStringAsync($"{url}/marketstat/json?typeid={searchResults.Inventorytype[0]}&usesystem=30002659");
+                        var centralreply = JsonConvert.DeserializeObject<List<Items>>(eveCentralReply)[0];
+                        await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
+                        await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Dodixie**{Environment.NewLine}" +
+                            $"**Buy:**{Environment.NewLine}" +
+                            $"```Low: {centralreply.Buy.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Buy.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Buy.Max:n2}```" +
+                            $"{Environment.NewLine}" +
+                            $"**Sell**:{Environment.NewLine}" +
+                            $"```Low: {centralreply.Sell.Min:n2}{Environment.NewLine}" +
+                            $"Avg: {centralreply.Sell.Avg:n2}{Environment.NewLine}" +
+                            $"High: {centralreply.Sell.Max:n2}```");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        if (system == "")
-                        {
-                            var eveCentralReply = await webClient.GetAsync($"http://api.eve-central.com/api/marketstat/json?typeid={jObject["typeID"]}");
-                            var eveCentralReplyString = eveCentralReply.Content;
-                            var centralreply = JToken.Parse(await eveCentralReply.Content.ReadAsStringAsync());
-                            await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
-                            await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: **Universe**{Environment.NewLine}" +
-                                $"**Buy:**{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["buy"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["buy"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["buy"]["max"]:n2}```" +
-                                $"{Environment.NewLine}" +
-                                $"**Sell**:{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["sell"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["sell"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["sell"]["max"]:n2}```");
-                        }
-                        if (system == "jita")
-                        {
-                            var eveCentralReply = await webClient.GetAsync($"http://api.eve-central.com/api/marketstat/json?typeid={jObject["typeID"]}&usesystem=30000142");
-                            var eveCentralReplyString = eveCentralReply.Content;
-                            var centralreply = JToken.Parse(await eveCentralReply.Content.ReadAsStringAsync());
-                            await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
-                            await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: Jita{Environment.NewLine}" +
-                                $"**Buy:**{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["buy"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["buy"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["buy"]["max"]:n2}```" +
-                                $"{Environment.NewLine}" +
-                                $"**Sell**:{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["sell"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["sell"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["sell"]["max"]:n2}```");
-                        }
-                        if (system == "amarr")
-                        {
-                            var eveCentralReply = await webClient.GetAsync($"http://api.eve-central.com/api/marketstat/json?typeid={jObject["typeID"]}&usesystem=30002187");
-                            var eveCentralReplyString = eveCentralReply.Content;
-                            var centralreply = JToken.Parse(await eveCentralReply.Content.ReadAsStringAsync());
-                            await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
-                            await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: Amarr{Environment.NewLine}" +
-                                $"**Buy:**{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["buy"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["buy"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["buy"]["max"]:n2}```" +
-                                $"{Environment.NewLine}" +
-                                $"**Sell**:{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["sell"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["sell"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["sell"]["max"]:n2}```");
-                        }
-                        if (system == "rens")
-                        {
-                            var eveCentralReply = await webClient.GetAsync($"http://api.eve-central.com/api/marketstat/json?typeid={jObject["typeID"]}&usesystem=30002510");
-                            var eveCentralReplyString = eveCentralReply.Content;
-                            var centralreply = JToken.Parse(await eveCentralReply.Content.ReadAsStringAsync());
-                            await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
-                            await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: Rens{Environment.NewLine}" +
-                                $"**Buy:**{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["buy"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["buy"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["buy"]["max"]:n2}```" +
-                                $"{Environment.NewLine}" +
-                                $"**Sell**:{Environment.NewLine}" +
-                                $"```Low: {centralreply[0]["sell"]["min"]:n2}{Environment.NewLine}" +
-                                $"Avg: {centralreply[0]["sell"]["avg"]:n2}{Environment.NewLine}" +
-                                $"High: {centralreply[0]["sell"]["max"]:n2}```");
-                        }
-                        if (system == "dodixe")
-                        {
-                            var eveCentralReply = await webClient.GetAsync($"http://api.eve-central.com/api/marketstat/json?typeid={jObject["typeID"]}&usesystem=30002659");
-                            var eveCentralReplyString = eveCentralReply.Content;
-                            var centralreply = JToken.Parse(await eveCentralReply.Content.ReadAsStringAsync());
-                            await Client_Log(new LogMessage(LogSeverity.Info, "PCheck", $"Sending {context.Message.Author}'s Price check to {channel.Name}"));
-                            await channel.SendMessageAsync($"{context.Message.Author.Mention}, System: Dodixe{Environment.NewLine}" +
-                                $"**Buy:**{Environment.NewLine}" +
-                                $"      Low: {centralreply[0]["buy"]["min"]:n}{Environment.NewLine}" +
-                                $"      Avg: {centralreply[0]["buy"]["avg"]:n}{Environment.NewLine}" +
-                                $"      High: {centralreply[0]["buy"]["max"]:n}{Environment.NewLine}" +
-                                $"**Sell**:{Environment.NewLine}" +
-                                $"      Low: {centralreply[0]["sell"]["min"]:n}{Environment.NewLine}" +
-                                $"      Avg: {centralreply[0]["sell"]["avg"]:n}{Environment.NewLine}" +
-                                $"      High: {centralreply[0]["sell"]["max"]:n}{Environment.NewLine}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        await Client_Log(new LogMessage(LogSeverity.Error, "PC", ex.Message, ex));
-                    }
+                    await Client_Log(new LogMessage(LogSeverity.Error, "PC", ex.Message, ex));
                 }
             }
         }
