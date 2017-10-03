@@ -15,7 +15,7 @@ namespace Opux
         public async Task Help()
         {
             var userInfo = Context.Message.Author;
-            await ReplyAsync($"{userInfo.Mention}, Here is a list of plugins available, **!about | !char | !corp | !help | !jita | !amarr | !dodixe | !rens | !pc | !evetime**");
+            await ReplyAsync($"{userInfo.Mention}, Here is a list of plugins available, **!about | !char | !corp | !help | !jita | !amarr | !dodixie | !rens | !pc | !evetime**");
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Opux
         /// 
         /// </summary>
         /// <returns></returns>
-        [Command("dodixe", RunMode = RunMode.Async), Summary("Performs Prices Checks Example: !pc Tritanium")]
+        [Command("dodixie", RunMode = RunMode.Async), Summary("Performs Prices Checks Example: !pc Tritanium")]
         public async Task Dodixe([Remainder] string x)
         {
             var userInfo = Context.Message.Author;
