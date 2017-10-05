@@ -104,7 +104,7 @@ namespace Opux
             }
             else
             {
-                await Functions.PriceCheck(Context, x, "dodixe");
+                await Functions.PriceCheck(Context, x, "dodixie");
             }
         }
 
