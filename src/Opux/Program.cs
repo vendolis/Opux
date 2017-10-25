@@ -34,6 +34,7 @@ namespace Opux
         {
             try
             {
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", "OpuxBot");
                 ApplicationBase = Path.GetDirectoryName(new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath);
                 if (!File.Exists(ApplicationBase + "/Opux.db"))
                     File.Copy(ApplicationBase + "/Opux.def.db", ApplicationBase + "/Opux.db");
