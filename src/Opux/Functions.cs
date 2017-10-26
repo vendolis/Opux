@@ -301,12 +301,13 @@ namespace Opux
         #region Char
         internal async static Task Char(ICommandContext context, string x)
         {
-                var ESIFailure = false;
-                var channel = context.Channel;
-                var responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=true");
-                if (!responce.IsSuccessStatusCode)
-                    ESIFailure = true;
-                var characterID = JsonConvert.DeserializeObject<CharacterID>(await responce.Content.ReadAsStringAsync());
+            var channel = context.Channel;
+            var responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=true");
+            CharacterID characterID = new CharacterID();
+            if (responce.IsSuccessStatusCode)
+            {
+                characterID = JsonConvert.DeserializeObject<CharacterID>(await responce.Content.ReadAsStringAsync());
+            }
             if (characterID.Character == null)
             {
                 await channel.SendMessageAsync($"{context.User.Mention}, Char not found please try again");
@@ -314,15 +315,17 @@ namespace Opux
             else
             {
                 responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{characterID.Character[0]}/?datasource=tranquility");
-                if (!responce.IsSuccessStatusCode)
-                    ESIFailure = true;
-
-                var characterData = JsonConvert.DeserializeObject<CharacterData>(await responce.Content.ReadAsStringAsync());
+                CharacterData characterData = new CharacterData();
+                if (responce.IsSuccessStatusCode)
+                {
+                    characterData = JsonConvert.DeserializeObject<CharacterData>(await responce.Content.ReadAsStringAsync());
+                }
                 responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{characterData.Corporation_id}/?datasource=tranquility");
-                if (!responce.IsSuccessStatusCode)
-                    ESIFailure = true;
-
-                var corporationData = JsonConvert.DeserializeObject<CorporationData>(await responce.Content.ReadAsStringAsync());
+                CorporationData corporationData = new CorporationData();
+                if (responce.IsSuccessStatusCode)
+                {
+                    corporationData = JsonConvert.DeserializeObject<CorporationData>(await responce.Content.ReadAsStringAsync());
+                }
                 responce = await Program._httpClient.GetAsync($"https://zkillboard.com/api/kills/characterID/{characterID.Character[0]}/");
 
                 List<Kill> zkillContent = new List<Kill>();
@@ -337,9 +340,10 @@ namespace Opux
                 try
                 {
                     responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/systems/{zkillLast.solar_system_id}/?datasource=tranquility&language=en-us");
-                    if (!responce.IsSuccessStatusCode)
-                        ESIFailure = true;
-                    systemData = JsonConvert.DeserializeObject<SystemData>(await responce.Content.ReadAsStringAsync());
+                    if (responce.IsSuccessStatusCode)
+                    {
+                        systemData = JsonConvert.DeserializeObject<SystemData>(await responce.Content.ReadAsStringAsync());
+                    }
                 }
                 catch (HttpRequestException ex)
                 {
@@ -366,9 +370,10 @@ namespace Opux
                 try
                 {
                     responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/universe/types/{lastShipType}/?datasource=tranquility&language=en-us");
-                    if (!responce.IsSuccessStatusCode)
-                        ESIFailure = true;
-                    lastShip = JsonConvert.DeserializeObject<ShipType>(await responce.Content.ReadAsStringAsync());
+                    if (responce.IsSuccessStatusCode)
+                    {
+                        lastShip = JsonConvert.DeserializeObject<ShipType>(await responce.Content.ReadAsStringAsync());
+                    }
                 }
                 catch (HttpRequestException ex)
                 {
@@ -382,9 +387,10 @@ namespace Opux
                     if (characterData.Alliance_id != -1)
                     {
                         responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/alliances/{characterData.Alliance_id}/?datasource=tranquility");
-                        if (!responce.IsSuccessStatusCode)
-                            ESIFailure = true;
-                        allianceData = JsonConvert.DeserializeObject<AllianceData>(await responce.Content.ReadAsStringAsync());
+                        if (responce.IsSuccessStatusCode)
+                        {
+                            allianceData = JsonConvert.DeserializeObject<AllianceData>(await responce.Content.ReadAsStringAsync());
+                        }
                     }
                 }
                 catch (HttpRequestException ex)
@@ -394,21 +400,15 @@ namespace Opux
 
                 var alliance = allianceData.alliance_name ?? "None";
 
-                if (!ESIFailure)
-                {
-                    await channel.SendMessageAsync($"```Name: {characterData.Name}{Environment.NewLine}" +
-                        $"DOB: {characterData.Birthday}{Environment.NewLine}{Environment.NewLine}" +
-                        $"Corporation Name: {corporationData.Corporation_name}{Environment.NewLine}" +
-                        $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
-                        $"Last System: {systemData.name}{Environment.NewLine}" +
-                        $"Last Ship: {lastShip.name}{Environment.NewLine}" +
-                        $"Last Seen: {lastSeen}{Environment.NewLine}```" +
-                        $"ZKill: https://zkillboard.com/character/{characterID.Character[0]}/");
-                }
-                else
-                {
-                    await channel.SendMessageAsync($"{context.Message.Author.Mention}, ESI Failure try again later");
-                }
+
+                await channel.SendMessageAsync($"```Name: {characterData.Name}{Environment.NewLine}" +
+                    $"DOB: {characterData.Birthday}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Corporation Name: {corporationData.Corporation_name}{Environment.NewLine}" +
+                    $"Alliance Name: {alliance}{Environment.NewLine}{Environment.NewLine}" +
+                    $"Last System: {systemData.name}{Environment.NewLine}" +
+                    $"Last Ship: {lastShip.name}{Environment.NewLine}" +
+                    $"Last Seen: {lastSeen}{Environment.NewLine}```" +
+                    $"ZKill: https://zkillboard.com/character/{characterID.Character[0]}/");
             }
             await Task.CompletedTask;
         }
