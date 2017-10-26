@@ -304,11 +304,11 @@ namespace Opux
             var channel = context.Channel;
             var responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/search/?categories=character&datasource=tranquility&language=en-us&search={x}&strict=true");
             CharacterID characterID = new CharacterID();
-            if (responce.IsSuccessStatusCode)
+            if (!responce.IsSuccessStatusCode)
             {
-                characterID = JsonConvert.DeserializeObject<CharacterID>(await responce.Content.ReadAsStringAsync());
+                await channel.SendMessageAsync($"{context.User.Mention}, Character ESI Failure, Please try again later");
             }
-            if (characterID.Character == null)
+            else if (characterID.Character == null)
             {
                 await channel.SendMessageAsync($"{context.User.Mention}, Char not found please try again");
             }
@@ -425,7 +425,7 @@ namespace Opux
                 var corpContent = JsonConvert.DeserializeObject<CorpIDLookup>(responceMessage);
             if (!responce.IsSuccessStatusCode)
             {
-                await channel.SendMessageAsync($"{context.User.Mention}, ESI Failure, Please try again later");
+                await channel.SendMessageAsync($"{context.User.Mention}, Corporation ESI Failure, Please try again later");
             }
             else if (corpContent.corporation == null)
             {
@@ -433,17 +433,13 @@ namespace Opux
             }
             else
             {
-                var ESIFailure = false;
-
                 responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/corporations/{corpContent.corporation[0]}/?datasource=tranquility");
-                if (!responce.IsSuccessStatusCode)
-                    ESIFailure = true;
-                responceMessage = await responce.Content.ReadAsStringAsync();
+                if (responce.IsSuccessStatusCode)
+                { responceMessage = await responce.Content.ReadAsStringAsync(); }
                 var CorpDetailsContent = JsonConvert.DeserializeObject<CorporationData>(responceMessage);
                 responce = await Program._httpClient.GetAsync($"https://esi.tech.ccp.is/latest/characters/{CorpDetailsContent.Ceo_id}/?datasource=tranquility");
-                if (!responce.IsSuccessStatusCode)
-                    ESIFailure = true;
-                responceMessage = await responce.Content.ReadAsStringAsync();
+                if (responce.IsSuccessStatusCode)
+                { responceMessage = await responce.Content.ReadAsStringAsync(); }
                 var CEONameContent = JsonConvert.DeserializeObject<CharacterData>(responceMessage);
                 var alliance = "None";
                 if (CorpDetailsContent.Alliance_id != -1)
@@ -452,19 +448,12 @@ namespace Opux
                     var allyContent = JsonConvert.DeserializeObject<AllianceData>(responceMessage);
                     alliance = allyContent.alliance_name;
                 }
-                if (!ESIFailure)
-                {
-                    await channel.SendMessageAsync($"```Corp Name: {CorpDetailsContent.Corporation_name}{Environment.NewLine}" +
-                            $"Corp Ticker: {CorpDetailsContent.Ticker}{Environment.NewLine}" +
-                            $"CEO: {CEONameContent.Name}{Environment.NewLine}" +
-                            $"Alliance Name: {alliance}{Environment.NewLine}" +
-                            $"Member Count: {CorpDetailsContent.Member_count}{Environment.NewLine}```" +
-                            $"ZKill: https://zkillboard.com/corporation/{corpContent.corporation[0]}/");
-                }
-                else
-                {
-                    await channel.SendMessageAsync($"{context.Message.Author.Mention}, ESI Failure try again later");
-                }
+                await channel.SendMessageAsync($"```Corp Name: {CorpDetailsContent.Corporation_name}{Environment.NewLine}" +
+                  $"Corp Ticker: {CorpDetailsContent.Ticker}{Environment.NewLine}" +
+                  $"CEO: {CEONameContent.Name}{Environment.NewLine}" +
+                  $"Alliance Name: {alliance}{Environment.NewLine}" +
+                  $"Member Count: {CorpDetailsContent.Member_count}{Environment.NewLine}```" +
+                  $"ZKill: https://zkillboard.com/corporation/{corpContent.corporation[0]}/");
             }
             await Task.CompletedTask;
         }
