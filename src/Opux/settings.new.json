@@ -1,8 +1,9 @@
 {
   "config": {
-    "token": "",
     "name": "Opux",
     "game": "Status",
+    "token": "",
+    "Windows7Compatable": false,
     "commandprefix": "!",
     "logchan": 0,
     "guildId": 0,
@@ -16,9 +17,12 @@
     "time": false,
     "fleetup": false,
     "jabber": false,
-    "MOTD": false,
-    "notificationFeed": false,
     "timeformat": "yyyy/MM/dd/ HH:mm:ss",
+    "MOTD": false,
+    "updatetopic": false,
+    "restricted": 0,
+    "notificationFeed": false,
+    "authInterval": "30",
     "adminRoles": [ "Admin" ]
   },
   "mysqlConfig": {
@@ -50,7 +54,6 @@
     }
   },
   "auth": {
-    "authInterval": "30",
     "url": "",
     "port": 80,
     "authurl": "",
@@ -90,9 +93,7 @@
     "motdcharid": "",
     "motdtopicchan": 0,
     "topicInterval": "30",
-    "MOTDChan": "",
-    "updatetopic": false,
-    "restricted": 0
+    "MOTDChan": ""
   },
   "fleetup": {
     "UserId": "",

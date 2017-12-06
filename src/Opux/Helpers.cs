@@ -1,16 +1,10 @@
-﻿using Discord.Commands;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Opux
 {
     class Helpers
     {
-        internal static bool IsUserMention(ICommandContext context)
-        {
-            if(context.Message.MentionedUserIds.Count != 0)
-            {
-                return true;
-            }
-            return false;
-        }
     }
 }

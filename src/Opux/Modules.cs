@@ -198,14 +198,7 @@ namespace Opux
             {
                 try
                 {
-                    if (Helpers.IsUserMention(Context))
-                    {
-                        await Functions.SendAuthMessage(Context);
-                    }
-                    else
-                    {
-                        await Functions.AuthUser(Context, x);
-                    }
+                    await Functions.AuthUser(Context, x);
                 }
                 catch (Exception ex)
                 {
@@ -322,25 +315,6 @@ namespace Opux
             try
             {
                 await Functions.Corp(Context, x);
-            }
-            catch (Exception ex)
-            {
-                await Functions.Client_Log(new Discord.LogMessage(Discord.LogSeverity.Error, "Modules", ex.Message, ex));
-                await Task.FromException(ex);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Command("dupes", RunMode = RunMode.Async), Summary("Deletes Duplicate Discord ID's from the MYSQL database")]
-        [CheckForRole]
-        public async Task Dupes()
-        {
-            try
-            {
-                await Functions.Dupes(Context, null);
             }
             catch (Exception ex)
             {
